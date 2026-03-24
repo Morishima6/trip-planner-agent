@@ -1,0 +1,72 @@
+# HelloAgents Trip Planner - Docker Compose 配置
+
+version: '3.8'
+
+services:
+  # Qdrant 向量数据库
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: helloagents-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: helloagents-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/.env:/app/.env:ro
+      - kb_data:/app/kb
+      - memory_data:/app/memory
+    environment:
+      - AMAP_MAPS_API_KEY=${AMAP_MAPS_API_KEY}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - LLM_MODEL_ID=${LLM_MODEL_ID}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端 Nginx 服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: helloagents-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:
+  kb_data:
+  memory_data:
+
+networks:
+  default:
+    name: helloagents-network
