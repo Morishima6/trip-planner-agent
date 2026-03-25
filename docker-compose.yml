@@ -31,7 +31,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/.env:/app/.env:ro
-      - kb_data:/app/kb
+      - ./backend/kb:/app/kb:ro
       - memory_data:/app/memory
     environment:
       - AMAP_MAPS_API_KEY=${AMAP_MAPS_API_KEY}
@@ -64,7 +64,6 @@ services:
 
 volumes:
   qdrant_storage:
-  kb_data:
   memory_data:
 
 networks:
