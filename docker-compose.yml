@@ -1,7 +1,5 @@
 # HelloAgents Trip Planner - Docker Compose 配置
 
-version: '3.8'
-
 services:
   # Qdrant 向量数据库
   qdrant:
@@ -15,11 +13,6 @@ services:
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # 后端 API 服务
   backend:
@@ -41,14 +34,8 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
     depends_on:
-      qdrant:
-        condition: service_healthy
+      - qdrant
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # 前端 Nginx 服务
   frontend:

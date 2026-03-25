@@ -78,8 +78,8 @@ export interface TripPlan {
 
 export interface TripFormData {
   city: string
-  start_date: string
-  end_date: string
+  start_date: string | null
+  end_date: string | null
   travel_days: number
   transportation: string
   accommodation: string
